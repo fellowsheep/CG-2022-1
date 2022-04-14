@@ -121,6 +121,9 @@ int main()
 	cameraFront = glm::vec3(0.0, 0.0, -1.0); //vetor
 	cameraUp = glm::vec3(0.0, 1.0, 0.0);
 
+	//Propriedades do material dos objetos
+	float ka, kd, ks, n;
+
 	//Mandando para o shader as infos de iluminação
 	GLint objectColorLoc = glGetUniformLocation(shader.ID, "objectColor");
 	GLint lightColorLoc = glGetUniformLocation(shader.ID, "lightColor");
@@ -130,13 +133,6 @@ int main()
 	glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
 	glUniform3f(lightPosLoc, 0.0, 5.0, 2.0);
 	glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
-
-	//MATRIZ DE MODELO
-	glm::mat4 model = glm::mat4(1); //matriz identidade;
-	GLint modelLoc = glGetUniformLocation(shader.ID, "model");
-	model = glm::scale(model, glm::vec3(3.0, 3.0, 3.0));
-	//model = glm::rotate(model, /*(GLfloat)glfwGetTime()*/glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
 
 	// MATRIZ DE VIEW (olhando de frente)
 	glm::mat4 view = glm::mat4(1); //matriz identidade;
@@ -150,6 +146,8 @@ int main()
 	//projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -3.0f, 3.0f);
 	GLint projectionLoc = glGetUniformLocation(shader.ID, "projection");
 	glUniformMatrix4fv(projectionLoc, 1, FALSE, glm::value_ptr(projection));
+
+	GLint modelLoc = glGetUniformLocation(shader.ID, "model");
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -169,58 +167,49 @@ int main()
 
 		float angle = (GLfloat)glfwGetTime();
 
-		model = glm::mat4(1);
-		if (rotateX)
-		{
-			model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-
-		}
-		else if (rotateY)
-		{
-			model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-
-		}
-		else if (rotateZ)
-		{
-			model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-
-		}
-
 		glm::mat4 view = glm::mat4(1); //matriz identidade;
-		switch (viewID)
-		{
-		case 1: //FRENTE - VERDE
-			view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			break;
-		case 2: //ATRÁS - AMARELO
-			view = glm::lookAt(glm::vec3(0.0f, 0.0f, -3.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			break;
-		case 3: //ESQUERDA - AZUL
-			view = glm::lookAt(glm::vec3(-3.0f, 0.0f, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			break;
-		case 4: //DIREITA - ROXO
-			view = glm::lookAt(glm::vec3(3.0f, 0.0f, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			break;
-		case 5: //CIMA - LARANJA
-			view = glm::lookAt(glm::vec3(0.0f, 3.0f, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			break;
-		}
-
 		//Aqui atualizamos o view com a posição e orientação da câmera atualizados
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
-		glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
-
 		glUniformMatrix4fv(viewLoc, 1, FALSE, glm::value_ptr(view));
-
-
-		glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
+		//Atualizar o shader com a posição da câmera
+		glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
+		
+		//MATRIZ DE MODELO
+		 //matriz identidade;
+		
+		
+			
 		// Chamada de desenho - drawcall
 		// Poligono Preenchido - GL_TRIANGLES
 
-		glBindVertexArray(VAO);
+		float xi = -1.5;
+		float offsetx = 0.7;
+
+		float yi = -0.5;
+		float offsety = 0.7;
+
+		shader.setFloat("ka", 0.5);
+		shader.setFloat("kd", 0.45);
+		shader.setFloat("ks", 0.25);
+
+		float ns[5] = { 3.0, 5.0, 10.0, 27.0, 200.0 };
+		float kss[3] = { 0.1, 0.25, 0.5 };
+
 		glUniform3f(objectColorLoc, 1.0f, 0.0f, 1.0f);
-		glDrawArrays(GL_TRIANGLES, 0, meshSize);
+		glBindVertexArray(VAO);
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 5; j++)
+			{
+				shader.setFloat("ks", kss[i]);
+				shader.setFloat("n", ns[j]);
+				glm::mat4 model = glm::mat4(1);
+				model = glm::translate(model, glm::vec3(xi + j * offsetx, yi + i*offsety, 0.0));
+				model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
+				glUniformMatrix4fv(modelLoc, 1, FALSE, glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, meshSize);
+			}
+		}
 
 		// Chamada de desenho - drawcall
 		// CONTORNO - GL_LINE_LOOP
