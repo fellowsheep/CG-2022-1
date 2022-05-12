@@ -1,6 +1,7 @@
-# Hello OpenCV - OpenGL
+# Hello OpenCV 
 
-Projeto que integra OpenCV com OpenGL Moderna - v.1.0 - Para propósitos didáticos
+Projeto demonstrando alguns filtros principais do OpenCV e captura da cânera - v.1.0 - Para propósitos didáticos
+Baseado nos exemplos do próprio OpenCV
 
 Por Rossana B Queiroz 
 
